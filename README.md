@@ -1,22 +1,20 @@
 # Music Catalog API
-
-Lightweight Music Catalog Microservice optimized for Settop Box (STB) devices. Built with Express.js and Domain-Driven Design (DDD) architecture for integration with Book Catalog API via Gemini AI recommendations service.
+Layanan mikroservis yang dioptimalkan untuk _deployment_ via set top box. Dibangun menggunakan express.js dan menggunakan pendekatan domain driven design untuk integrasi API katalog buku
 
 ## 🎯 Project Overview
-
-**Anggota**: B - Sistem Terintegrasi  
+ 
 **Stack**: Express.js + MySQL  
 **Architecture**: Domain-Driven Design (DDD)  
 **Optimization**: STB-optimized with Connection Pool & minimal dependencies
 
 ## 📋 Features
 
-- ✅ Lightweight REST API with compression
-- ✅ Connection Pool (max 5 connections) for STB efficiency
-- ✅ API Key authentication for inter-service communication
-- ✅ Pagination support (10-20 items per page)
-- ✅ Batch operations for efficient data retrieval
-- ✅ Docker support with alpine image (< 150MB)
+- ✅ REST API dengan kompresi
+- ✅ Connection Pool (max 5 connections) untuk efisiensi STB
+- ✅ Autentikasi API key untuk komunikasi antar layanan
+- ✅ Support paginasi (10-20 items per page)
+- ✅ Pengambilan data dengan pendekatan _batching_
+- ✅ Docker support dengan alphine image (< 150MB)
 - ✅ Graceful shutdown handling
 - ✅ Health check endpoint
 
@@ -73,7 +71,7 @@ Server will run on `http://localhost:3000`
 
 ### Authentication
 
-All endpoints (except `/health` and `/music/genres`) require API Key authentication:
+Semua endpoint (kecuali `/health`, `/music/genres`, dan `/api-docs`) membutuhkan autentikasi API Key :
 
 ```bash
 X-API-Key: your-secret-api-key-here
@@ -112,7 +110,7 @@ curl http://localhost:3000/health
 
 **GET** `/music?page=1&limit=10`
 
-Get paginated list of tracks.
+Mendapatkan paginasi list of tracks.
 
 **Parameters:**
 - `page` (optional): Page number, default = 1
@@ -151,7 +149,7 @@ curl -H "X-API-Key: your-api-key" \
 
 **GET** `/music/:id`
 
-Get detailed track information with audio features for Gemini AI.
+Mendapatkan informasi detail tentang musik.
 
 **Example:**
 ```bash
@@ -185,7 +183,7 @@ curl -H "X-API-Key: your-api-key" \
 
 **GET** `/music/batch?ids=1,2,3`
 
-Get multiple tracks in one request (efficient for Book API integration).
+Mendapatkan beberapa track sekaligus dalam satu request
 
 **Parameters:**
 - `ids` (required): Comma-separated track IDs, max 50 IDs
@@ -221,7 +219,7 @@ curl -H "X-API-Key: your-api-key" \
 
 **GET** `/music/search?genre=rock&page=1&limit=10`
 
-Filter tracks by genre.
+Mencari musik berdasarkan genre.
 
 **Parameters:**
 - `genre` (required): Genre name
@@ -250,7 +248,7 @@ curl -H "X-API-Key: your-api-key" \
 
 **GET** `/music/recommendations?genre=rock&mood=energetic&limit=20`
 
-Get pre-filtered recommendations based on genre and mood.
+Mendapatkan lagu berdasarkan genre dan mood.
 
 **Parameters:**
 - `genre` (optional): Genre filter
@@ -291,7 +289,7 @@ curl -H "X-API-Key: your-api-key" \
 
 **GET** `/music/genres`
 
-Get list of all available genres.
+Mendapatkan semua genre yang _available_
 
 **Example:**
 ```bash
@@ -381,9 +379,7 @@ docker run -p 3000:3000 \
 
 ## 📊 Database Configuration
 
-### Expected Table Structure
-
-Your existing table should have these columns:
+### Table Structure
 
 | Column | Type | Description |
 |--------|------|-------------|
@@ -423,55 +419,15 @@ connectTimeout: 10000    // 10 seconds
 queryTimeout: 30000      // 30 seconds
 ```
 
-**Why this matters for STB:**
-1. Prevents RAM exhaustion with limited connections
-2. Reuses connections instead of creating new ones
-3. Automatically cleans up idle connections
-4. Prevents database connection leaks
 
 ### Response Compression
 
-All responses are compressed using gzip/deflate to reduce bandwidth.
+Semua respons dikompres menggunakan gzip/deflate untuk mengurangi penggunaan bandwidth.
 
 ### Request Size Limits
 
 - JSON body limit: 100KB
 - Prevents memory issues on STB
-
----
-
-## 🔧 Troubleshooting
-
-### Database Connection Failed
-
-```bash
-Error: Database connection failed. Please check if MySQL is running.
-```
-
-**Solution:**
-1. Verify MySQL is running: `sudo systemctl status mysql`
-2. Check credentials in `.env`
-3. Test connection: `mysql -u username -p database_name`
-
-### Table Not Found
-
-```bash
-Error: Database table not found. Please check your configuration.
-```
-
-**Solution:**
-1. Verify table name in `.env` matches your database
-2. Check table exists: `SHOW TABLES;`
-
-### API Key Invalid
-
-```bash
-{"success": false, "error": "Invalid API key"}
-```
-
-**Solution:**
-1. Check `X-API-Key` header matches `.env` API_KEY
-2. Ensure header name is exact: `X-API-Key`
 
 ---
 
@@ -506,51 +462,3 @@ TST-API/
 ├── docker-compose.yml
 └── package.json
 ```
-
----
-
-## 🎓 Notes for Anggota A (Book Catalog Integration)
-
-### Key Points:
-
-1. **Authentication**: Use `X-API-Key` header for all requests
-2. **Gemini AI Format**: Use `/music/:id` endpoint for detailed audio features
-3. **Batch Operations**: Use `/music/batch` for multiple tracks (more efficient than individual requests)
-4. **CORS**: Add your Book API origin to `ALLOWED_ORIGINS` in `.env`
-5. **Error Handling**: All responses follow `{success: true/false, data/error: ...}` structure
-
-### Example Integration Code:
-
-```javascript
-// In your Book Catalog API
-const MUSIC_API_URL = 'http://localhost:3000';
-const MUSIC_API_KEY = 'your-api-key';
-
-async function getTrackForGemini(trackId) {
-  try {
-    const response = await fetch(`${MUSIC_API_URL}/music/${trackId}`, {
-      headers: { 'X-API-Key': MUSIC_API_KEY }
-    });
-    const result = await response.json();
-    
-    if (result.success) {
-      return result.data; // Ready for Gemini AI
-    }
-  } catch (error) {
-    console.error('Music API error:', error);
-  }
-}
-```
-
----
-
-## 📄 License
-
-ISC - Proyek Sistem Terintegrasi
-
----
-
-## 👥 Author
-
-Anggota B - Sistem Terintegrasi  
-Music Catalog Microservice
