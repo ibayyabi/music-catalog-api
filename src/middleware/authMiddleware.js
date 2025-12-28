@@ -11,12 +11,13 @@ const config = require('../../config/config');
  * Returns 401 if API key is invalid
  */
 const authenticate = (req, res, next) => {
-    const apiKey = req.headers['x-api-key'];
+    // Support API key from both header and query parameter
+    const apiKey = req.headers['x-api-key'] || req.query.apiKey;
 
     if (!apiKey) {
         return res.status(401).json({
             success: false,
-            error: 'API key is required. Please provide X-API-Key header.'
+            error: 'API key is required. Provide via X-API-Key header or ?apiKey= query parameter.'
         });
     }
 
@@ -37,7 +38,8 @@ const authenticate = (req, res, next) => {
  * Useful for endpoints that may be public but benefit from authentication
  */
 const optionalAuth = (req, res, next) => {
-    const apiKey = req.headers['x-api-key'];
+    // Support API key from both header and query parameter
+    const apiKey = req.headers['x-api-key'] || req.query.apiKey;
 
     if (apiKey && apiKey === config.security.apiKey) {
         req.authenticated = true;
