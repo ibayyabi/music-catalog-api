@@ -22,12 +22,17 @@ const options = {
         },
         servers: [
             {
-                url: `http://localhost:${config.server.port}`,
-                description: 'Development server',
+                url: 'https://ibay.ibayderikfariqalghanzaka.my.id',
+                description: 'STB Production server',
             },
             {
-                url: 'http://your-stb-ip:3000',
-                description: 'STB Production server',
+                url: 'http://localhost:3000',
+                description: 'Local development server',
+            },
+        ],
+        security: [
+            {
+                ApiKeyAuth: [],
             },
         ],
         components: {
