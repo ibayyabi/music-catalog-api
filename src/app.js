@@ -2,7 +2,6 @@ const express = require('express');
 const compression = require('compression');
 const cors = require('cors');
 const path = require('path');
-const swaggerUi = require('swagger-ui-express');
 const config = require('../config/config');
 const swaggerSpec = require('./config/swagger');
 const trackRoutes = require('./interfaces/routes/trackRoutes');
@@ -86,24 +85,58 @@ app.get('/', (req, res) => {
 app.use('/public', express.static(path.join(__dirname, '../public')));
 
 /**
- * API Documentation (Swagger UI)
- * Auto-generated from JSDoc comments in routes and config/swagger.js
- */
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
-    explorer: true,
-    customCss: '.swagger-ui .topbar { display: none }',
-    swaggerOptions: {
-        persistAuthorization: true,
-        displayRequestDuration: true
-    }
-}));
-
-/**
- * Raw Swagger JSON endpoint for debugging
+ * Raw Swagger JSON endpoint - MUST be defined BEFORE /api-docs
  */
 app.get('/swagger.json', (req, res) => {
     res.setHeader('Content-Type', 'application/json');
     res.send(swaggerSpec);
+});
+
+/**
+ * API Documentation (Swagger UI)
+ * Using direct HTML approach to avoid swagger-ui-express caching
+ */
+app.get('/api-docs', (req, res) => {
+    res.send(`
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Catalog API - Documentation</title>
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5.10.3/swagger-ui.css">
+    <style>
+        body { margin: 0; padding: 0; }
+        .topbar { display: none; }
+    </style>
+</head>
+<body>
+    <div id="swagger-ui"></div>
+    <script src="https://unpkg.com/swagger-ui-dist@5.10.3/swagger-ui-bundle.js"></script>
+    <script src="https://unpkg.com/swagger-ui-dist@5.10.3/swagger-ui-standalone-preset.js"></script>
+    <script>
+        window.onload = function() {
+            const ui = SwaggerUIBundle({
+                url: "/swagger.json",
+                dom_id: '#swagger-ui',
+                deepLinking: true,
+                persistAuthorization: true,
+                displayRequestDuration: true,
+                presets: [
+                    SwaggerUIBundle.presets.apis,
+                    SwaggerUIStandalonePreset
+                ],
+                plugins: [
+                    SwaggerUIBundle.plugins.DownloadUrl
+                ],
+                layout: "StandaloneLayout"
+            });
+            window.ui = ui;
+        };
+    </script>
+</body>
+</html>
+    `);
 });
 
 /**

@@ -3,7 +3,7 @@
     "info": {
         "title": "Music Catalog API",
         "version": "1.0.0",
-        "description": "Lightweight Music Catalog Microservice optimized for STB devices. This API provides access to a Spotify-based music catalog with track information, genre filtering, and AI-powered recommendations.",
+        "description": "Lightweight Music Catalog Microservice optimized for STB devices. This API provides access to a Spotify-based music catalog with track information, and genre filtering.",
         "contact": {
             "name": "Anggota B - Sistem Terintegrasi"
         }
@@ -180,7 +180,7 @@
         },
         {
             "name": "Genres",
-            "description": "Endpoint untuk genre (akses publik, tidak perlu API Key)"
+            "description": "Endpoint untuk genre (membutuhkan API Key)"
         }
     ],
     "paths": {
@@ -649,8 +649,7 @@
                     "Genres"
                 ],
                 "summary": "Get daftar semua genre",
-                "description": "Mengembalikan list semua genre yang tersedia. Endpoint ini TIDAK memerlukan autentikasi.",
-                "security": [],
+                "description": "Mengembalikan list semua genre yang tersedia.",
                 "responses": {
                     "200": {
                         "description": "Daftar genre",
@@ -688,7 +687,6 @@
                 ],
                 "summary": "Health check endpoint",
                 "description": "Check status kesehatan API",
-                "security": [],
                 "responses": {
                     "200": {
                         "description": "API healthy",

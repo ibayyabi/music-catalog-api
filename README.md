@@ -193,6 +193,9 @@ Mendapatkan beberapa track sekaligus dalam satu request
 curl -H "X-API-Key: your-api-key" \
   "http://localhost:3000/music/batch?ids=123,456,789"
 ```
+curl -X GET https://ibay.ibayderikfariqalghanzaka.my.id/music/batch?ids=123,456,789 \
+     -H "x-api-key: test-api-key-12345"
+
 
 **Response:**
 ```json

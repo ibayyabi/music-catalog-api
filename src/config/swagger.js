@@ -12,7 +12,7 @@ const options = {
         info: {
             title: 'Music Catalog API',
             version: '1.0.0',
-            description: 'Lightweight Music Catalog Microservice optimized for STB devices',
+            description: `Lightweight Music Catalog Microservice optimized for STB devices. Generated: ${new Date().toISOString()}`,
             contact: {
                 name: 'Anggota B - Sistem Terintegrasi',
             },
