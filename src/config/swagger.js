@@ -48,70 +48,32 @@ const options = {
                 Track: {
                     type: 'object',
                     properties: {
-                        TrackId: {
-                            type: 'integer',
-                            description: 'Unique track identifier',
-                            example: 1,
+                        track_id: {
+                            type: 'string',
+                            description: 'Spotify Track ID',
+                            example: '3322ArxAq7wCSZI4fF77Q0',
                         },
-                        Name: {
+                        track_name: {
                             type: 'string',
                             description: 'Track name',
-                            example: 'For Those About To Rock (We Salute You)',
+                            example: 'Please Don\'t Say You Love Me',
                         },
-                        AlbumId: {
-                            type: 'integer',
-                            description: 'Album identifier',
-                            example: 1,
-                        },
-                        MediaTypeId: {
-                            type: 'integer',
-                            description: 'Media type identifier',
-                            example: 1,
-                        },
-                        GenreId: {
-                            type: 'integer',
-                            description: 'Genre identifier',
-                            example: 1,
-                        },
-                        Composer: {
+                        artists: {
                             type: 'string',
-                            description: 'Track composer',
-                            example: 'Angus Young, Malcolm Young, Brian Johnson',
-                            nullable: true,
+                            description: 'Artist name(s)',
+                            example: 'Gabrielle Aplin',
                         },
-                        Milliseconds: {
-                            type: 'integer',
-                            description: 'Track duration in milliseconds',
-                            example: 343719,
-                        },
-                        Bytes: {
-                            type: 'integer',
-                            description: 'Track file size in bytes',
-                            example: 11170334,
-                            nullable: true,
-                        },
-                        UnitPrice: {
-                            type: 'number',
-                            format: 'decimal',
-                            description: 'Track price',
-                            example: 0.99,
+                        track_genre: {
+                            type: 'string',
+                            description: 'Music genre',
+                            example: 'acoustic',
                         },
                     },
                 },
                 Genre: {
-                    type: 'object',
-                    properties: {
-                        GenreId: {
-                            type: 'integer',
-                            description: 'Genre identifier',
-                            example: 1,
-                        },
-                        Name: {
-                            type: 'string',
-                            description: 'Genre name',
-                            example: 'Rock',
-                        },
-                    },
+                    type: 'string',
+                    description: 'Music genre name',
+                    example: 'acoustic',
                 },
                 Error: {
                     type: 'object',

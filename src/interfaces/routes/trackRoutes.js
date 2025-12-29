@@ -103,8 +103,8 @@ router.get('/', authenticate, trackController.listTracks.bind(trackController));
  *         required: true
  *         schema:
  *           type: string
- *         description: Comma-separated track IDs (e.g., "1,2,3,4,5")
- *         example: "1,2,3"
+ *         description: Comma-separated Spotify Track IDs
+ *         example: "3322ArxAq7wCSZI4fF77Q0,4LGF2tDg3878bs0mQPByZ4"
  *     responses:
  *       200:
  *         description: List of requested tracks
@@ -158,8 +158,8 @@ router.get('/batch', authenticate, trackController.getBatchTracks.bind(trackCont
  *         name: genre
  *         schema:
  *           type: string
- *         description: Filter by genre name
- *         example: "Rock"
+ *         description: Filter by genre name (case-insensitive, e.g., acoustic, ambient, chill, classical, piano)
+ *         example: "acoustic"
  *       - in: query
  *         name: page
  *         schema:
@@ -211,8 +211,8 @@ router.get('/search', authenticate, trackController.searchTracks.bind(trackContr
  *         name: genre
  *         schema:
  *           type: string
- *         description: Genre preference for recommendations
- *         example: "Rock"
+ *         description: Genre preference for recommendations (e.g., acoustic, ambient, chill)
+ *         example: "acoustic"
  *       - in: query
  *         name: mood
  *         schema:
@@ -265,9 +265,9 @@ router.get('/recommendations', authenticate, trackController.getRecommendations.
  *         name: id
  *         required: true
  *         schema:
- *           type: integer
- *         description: Track ID
- *         example: 1
+ *           type: string
+ *         description: Spotify Track ID
+ *         example: "3322ArxAq7wCSZI4fF77Q0"
  *     responses:
  *       200:
  *         description: Track details
