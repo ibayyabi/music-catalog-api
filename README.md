@@ -4,7 +4,7 @@
 
 ### **Tugas Akhir II3160 - Teknologi Sistem Terintegrasi**
 
-**Penyusun:** Mochamad Ikhbar Adiwinangun (18223050)
+"**Penyusun:**" Mochamad Ikhbar Adiwinangun (18223050)
 
 ---
 
