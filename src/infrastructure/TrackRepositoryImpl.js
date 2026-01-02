@@ -1,33 +1,25 @@
 const TrackRepository = require('../domain/TrackRepository');
 const Track = require('../domain/Track');
-const { getPool } = require('./database');
+const { query, queryOne } = require('./database');
 const config = require('../../config/config');
 
 /**
- * Track Repository Implementation
+ * Track Repository Implementation (SQLite)
  * Optimized queries for STB performance
- * 
- * NOTE: Using pool.query() instead of pool.execute() because
- * table columns are TEXT type (from CSV import), not proper numeric types.
- * This avoids "Incorrect arguments to mysqld_stmt_execute" errors.
  */
 
 class TrackRepositoryImpl extends TrackRepository {
     constructor() {
         super();
-        this.tableName = config.database.table;
+        this.tableName = 'tracks'; // SQLite table name
     }
 
     /**
      * Get all tracks with pagination
      */
     async findAll(limit = 10, offset = 0) {
-        const pool = getPool();
-        // Use query() instead of execute() to avoid type binding issues
-        const [rows] = await pool.query(
-            `SELECT * FROM ?? LIMIT ? OFFSET ?`,
-            [this.tableName, limit, offset]
-        );
+        const sql = `SELECT * FROM ${this.tableName} LIMIT ? OFFSET ?`;
+        const rows = await query(sql, [limit, offset]);
         return rows.map(row => new Track(row));
     }
 
@@ -35,17 +27,14 @@ class TrackRepositoryImpl extends TrackRepository {
      * Get single track by ID
      */
     async findById(trackId) {
-        const pool = getPool();
-        const [rows] = await pool.query(
-            `SELECT * FROM ?? WHERE track_id = ?`,
-            [this.tableName, trackId]
-        );
+        const sql = `SELECT * FROM ${this.tableName} WHERE track_id = ?`;
+        const row = await queryOne(sql, [trackId]);
 
-        if (rows.length === 0) {
+        if (!row) {
             return null;
         }
 
-        return new Track(rows[0]);
+        return new Track(row);
     }
 
     /**
@@ -57,12 +46,9 @@ class TrackRepositoryImpl extends TrackRepository {
             return [];
         }
 
-        const pool = getPool();
         const placeholders = trackIds.map(() => '?').join(',');
-        const [rows] = await pool.query(
-            `SELECT * FROM ${this.tableName} WHERE track_id IN (${placeholders})`,
-            trackIds
-        );
+        const sql = `SELECT * FROM ${this.tableName} WHERE track_id IN (${placeholders})`;
+        const rows = await query(sql, trackIds);
 
         return rows.map(row => new Track(row));
     }
@@ -71,53 +57,52 @@ class TrackRepositoryImpl extends TrackRepository {
      * Search tracks by genre
      */
     async searchByGenre(genre, limit = 10, offset = 0) {
-        const pool = getPool();
-        const [rows] = await pool.query(
-            `SELECT * FROM ?? WHERE track_genre = ? LIMIT ? OFFSET ?`,
-            [this.tableName, genre, limit, offset]
-        );
+        const sql = `SELECT * FROM ${this.tableName} WHERE track_genre = ? LIMIT ? OFFSET ?`;
+        const rows = await query(sql, [genre, limit, offset]);
 
         return rows.map(row => new Track(row));
     }
 
     /**
      * Find recommendations based on filters
-     * Optional: Pre-filtered recommendations for Gemini AI
+     * Supports genre, energy, and valence filtering
      */
     async findRecommendations(filters = {}) {
-        const pool = getPool();
-        let query = `SELECT * FROM ${this.tableName} WHERE 1=1`;
+        let sql = `SELECT * FROM ${this.tableName} WHERE 1=1`;
         const params = [];
 
         // Filter by genre
         if (filters.genre) {
-            query += ' AND track_genre = ?';
+            sql += ' AND track_genre = ?';
             params.push(filters.genre);
         }
 
         // Filter by energy range (mood)
-        // Since columns are TEXT, we compare as strings (works for decimals like "0.8")
         if (filters.minEnergy !== undefined) {
-            query += ' AND CAST(energy AS DECIMAL(10,4)) >= ?';
+            sql += ' AND energy >= ?';
             params.push(filters.minEnergy);
         }
         if (filters.maxEnergy !== undefined) {
-            query += ' AND CAST(energy AS DECIMAL(10,4)) <= ?';
+            sql += ' AND energy <= ?';
             params.push(filters.maxEnergy);
         }
 
         // Filter by valence (happiness)
         if (filters.minValence !== undefined) {
-            query += ' AND CAST(valence AS DECIMAL(10,4)) >= ?';
+            sql += ' AND valence >= ?';
             params.push(filters.minValence);
+        }
+        if (filters.maxValence !== undefined) {
+            sql += ' AND valence <= ?';
+            params.push(filters.maxValence);
         }
 
         // Limit results
         const limit = filters.limit || 20;
-        query += ' LIMIT ?';
+        sql += ' LIMIT ?';
         params.push(limit);
 
-        const [rows] = await pool.query(query, params);
+        const rows = await query(sql, params);
         return rows.map(row => new Track(row));
     }
 
@@ -125,23 +110,17 @@ class TrackRepositoryImpl extends TrackRepository {
      * Count total tracks
      */
     async count() {
-        const pool = getPool();
-        const [rows] = await pool.query(
-            `SELECT COUNT(*) as total FROM ??`,
-            [this.tableName]
-        );
-        return rows[0].total;
+        const sql = `SELECT COUNT(*) as total FROM ${this.tableName}`;
+        const result = await queryOne(sql);
+        return result ? result.total : 0;
     }
 
     /**
      * Get available genres
      */
     async getGenres() {
-        const pool = getPool();
-        const [rows] = await pool.query(
-            `SELECT DISTINCT track_genre FROM ?? ORDER BY track_genre`,
-            [this.tableName]
-        );
+        const sql = `SELECT DISTINCT track_genre FROM ${this.tableName} ORDER BY track_genre`;
+        const rows = await query(sql);
         return rows.map(row => row.track_genre);
     }
 }

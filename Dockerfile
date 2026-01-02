@@ -18,7 +18,7 @@ RUN apk add --no-cache dumb-init
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001
+  adduser -S nodejs -u 1001
 
 WORKDIR /app
 
@@ -41,5 +41,6 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
 # Use dumb-init to handle signals properly
 ENTRYPOINT ["dumb-init", "--"]
 
-# Start application
-CMD ["node", "src/server.js"]
+# Start application with memory limit
+# --max-old-space-size=96 limits heap to 96MB (safe for 128MB container)
+CMD ["node", "--max-old-space-size=96", "src/server.js"]

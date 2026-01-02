@@ -1,35 +1,7 @@
 version: '3.8'
 
 services:
-  # MySQL Database Service
-  mysql:
-    image: mysql:8.0
-    container_name: music-mysql
-    environment:
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
-      MYSQL_DATABASE: ${DB_NAME:-music_service_db}
-      MYSQL_USER: ${DB_USER:-music_service_db}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
-    volumes:
-      # Persistent database storage
-      - mysql_data:/var/lib/mysql
-      # Database initialization scripts and SQL dump
-      - ./database:/docker-entrypoint-initdb.d
-    restart: unless-stopped
-    # Resource limits untuk STB
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-          cpus: '1.0'
-    healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 180s
-
-  # Music Catalog API Service
+  # Music Catalog API Service (SQLite - Single Container)
   api:
     build:
       context: .
@@ -38,28 +10,22 @@ services:
     environment:
       PORT: 3000
       NODE_ENV: ${NODE_ENV:-production}
-      # Connect ke MySQL container
-      DB_HOST: mysql
-      DB_PORT: 3306
-      DB_USER: ${DB_USER:-music_service_db}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_NAME: ${DB_NAME:-music_service_db}
-      DB_TABLE: ${DB_TABLE:-tabel_musik}
-      DB_CONNECTION_LIMIT: ${DB_CONNECTION_LIMIT:-2}
-      DB_QUEUE_LIMIT: ${DB_QUEUE_LIMIT:-5}
+      # SQLite database path (inside container)
+      DB_PATH: /app/database/music_catalog.db
+      DB_TABLE: ${DB_TABLE:-tracks}
       API_KEY: ${API_KEY:-change-this-in-production}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3001}
     ports:
       - "${PORT:-3002}:3000"
-    depends_on:
-      mysql:
-        condition: service_healthy
+    volumes:
+      # Mount database directory for persistence
+      - ./database:/app/database
     restart: unless-stopped
-    # Resource limits untuk STB
+    # Reduced resource limits - no MySQL overhead!
     deploy:
       resources:
         limits:
-          memory: 256M
+          memory: 128M
           cpus: '0.5'
     # Health check
     healthcheck:
@@ -67,9 +33,4 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
-
-# Named volumes
-volumes:
-  mysql_data:
-    driver: local
+      start_period: 10s

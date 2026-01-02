@@ -1,7 +1,7 @@
 require('dotenv').config();
 const app = require('./app');
 const config = require('../config/config');
-const { testConnection, closePool } = require('./infrastructure/database');
+const { testConnection, closeDatabase } = require('./infrastructure/database');
 
 /**
  * Server Startup
@@ -57,15 +57,27 @@ const startServer = async () => {
  * Graceful Shutdown
  * Important for STB to properly release resources
  */
+let isShuttingDown = false; // Guard to prevent infinite loop
+
 const gracefulShutdown = async (signal) => {
+    // Prevent multiple shutdown attempts
+    if (isShuttingDown) {
+        return;
+    }
+    isShuttingDown = true;
+
     console.log(`\n${signal} received. Starting graceful shutdown...`);
 
     if (server) {
         server.close(async () => {
             console.log('✓ HTTP server closed');
 
-            // Close database pool
-            await closePool();
+            // Close database pool (now async, must await)
+            try {
+                await closeDatabase();
+            } catch (error) {
+                console.error('Error closing database:', error.message);
+            }
 
             console.log('✓ Graceful shutdown completed');
             process.exit(0);
@@ -88,12 +100,16 @@ process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 // Handle uncaught errors (prevent crash on STB)
 process.on('uncaughtException', (error) => {
     console.error('Uncaught Exception:', error);
-    gracefulShutdown('UNCAUGHT_EXCEPTION');
+    if (!isShuttingDown) {
+        gracefulShutdown('UNCAUGHT_EXCEPTION');
+    }
 });
 
 process.on('unhandledRejection', (reason, promise) => {
     console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-    gracefulShutdown('UNHANDLED_REJECTION');
+    if (!isShuttingDown) {
+        gracefulShutdown('UNHANDLED_REJECTION');
+    }
 });
 
 // Start the server
